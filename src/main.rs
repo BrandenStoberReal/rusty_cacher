@@ -1,5 +1,6 @@
 use std::{fs::{self, DirEntry}, io, path::{self, Path}, thread, time::Duration};
 use clap::Parser;
+use colored::Colorize;
 
 // Creates a folder.
 fn create_dir(path: &str) -> std::io::Result<()> {
@@ -58,13 +59,14 @@ fn main() {
         cachepath = app_data + "\\..\\LocalLow\\VRChat\\VRChat\\Cache-WindowsPlayer"; // Expressions are experimental for attributes so unix users should shove in their own path with the CLI flag
     }
 
+    // Create backup dir if it doesn't exist already
     create_dir(&args.backuppath).expect("Error creating the directory.");
     backup_path = args.backuppath;
 
-    println!("{}", String::from("[OPTION] Cache Directory: ") + path::absolute(&cachepath).unwrap().display().to_string().as_str());
-    println!("{}", String::from("[OPTION] Backup Directory: ") + path::absolute(&backup_path).unwrap().display().to_string().as_str());
+    println!("[{}] {}: {}", "OPTION".purple(), "Cache Directory".cyan(), &path::absolute(&cachepath).unwrap().display().to_string().red());
+    println!("[{}] {}: {}", "OPTION".purple(), "Backup Directory".cyan(), &path::absolute(&backup_path).unwrap().display().to_string().red());
     loop {
-        println!("[CACHE BACKUP] Beginning backup...");
+        println!("[{}] {}", "CACHE BACKUP".purple(), "Beginning backup...".green());
         let paths = fs::read_dir(&cachepath).unwrap();
         for path in paths {
             // Clone our variables (?????)
@@ -79,8 +81,8 @@ fn main() {
 
             // Copy files
             if !Path::new(&dest).exists() || &filename == "__info" {
-                println!("[CACHE BACKUP] Cache Location: {}", path::absolute(&refpath.clone().unwrap().path()).unwrap().display()); // These really should be a variable but fuck it
-                println!("[CACHE BACKUP] Backup Destination: {}", path::absolute(&dest).unwrap().display().to_string());
+                println!("[{}] {}: {}", "CACHE BACKUP".purple(), "Cache Location".green(), path::absolute(&refpath.clone().unwrap().path()).unwrap().display().to_string().red()); // These really should be a variable but fuck it
+                println!("[{}] {}: {}", "CACHE BACKUP".purple(), "Backup Destination".green(), path::absolute(&dest).unwrap().display().to_string().red());
                 if (&refpath).unwrap().metadata().unwrap().is_file() {
                     let _ = fs::copy(&refpath.unwrap().path(), &dest); // This is really only used for __info file
                 } else {
@@ -88,7 +90,7 @@ fn main() {
                 }
             }
         }
-        println!("[TIMEOUT] Sleeping {}s...", args.interval);
+        println!("[{}] {} {}{}{}", "TIMEOUT".purple(), "Sleeping".green(), args.interval.to_string().red(), "s".red(), "...".green());
         thread::sleep(Duration::from_secs(args.interval));
     }
 }
