@@ -73,7 +73,7 @@ fn main() {
             let dest: String = clonedbackup + "/" + &filename;
 
             // Copy files
-            if !Path::new(&dest).exists() {
+            if !Path::new(&dest).exists() || &filename == "__info" {
                 println!("Copying: {}", path::absolute((&refpath).clone().unwrap().path()).unwrap().display());
                 println!("Destination: {}", &dest);
                 if (&refpath).unwrap().metadata().unwrap().is_file() {
