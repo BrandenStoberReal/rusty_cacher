@@ -1,4 +1,4 @@
-use std::{fs::{self, DirEntry}, io, path::Path, thread, time::Duration};
+use std::{fs::{self, DirEntry}, io, path::{self, Path}, thread, time::Duration};
 use clap::Parser;
 
 fn createdir(path: &str) -> std::io::Result<()> {
@@ -34,7 +34,7 @@ struct Args {
     #[arg(short, long, default_value_t = String::from("./backup"))]
     backuppath: String,
 
-    // Time between backups, in seconds
+    // Time between cache scans in seconds.
     #[arg(short, long, default_value_t = 30)]
     interval: u64,
 }
@@ -58,29 +58,29 @@ fn main() {
     createdir(&args.backuppath).expect("Error creating the directory.");
     backup_path = args.backuppath;
 
+    println!("{}", String::from("Cache Directory: ") + path::absolute(&cachepath).unwrap().display().to_string().as_str());
+    println!("{}", String::from("Backup Directory: ") + path::absolute(&backup_path).unwrap().display().to_string().as_str());
     loop {
         println!("Beginning backup...");
-        println!("{}", String::from("Cache Directory: ") + fs::canonicalize(&cachepath).unwrap().display().to_string().as_str());
-        println!("{}", String::from("Backup Directory: ") + fs::canonicalize(&backup_path).unwrap().display().to_string().as_str());
-
-        println!("Reading cache...");
         let paths = fs::read_dir(&cachepath).unwrap();
         for path in paths {
             // Clone our variables hehe
             let clonedbackup: String = (&backup_path).clone().to_owned();
             let refpath:Result<&DirEntry, &io::Error> = (&path).as_ref();
-            println!("Copying: {}", fs::canonicalize((&refpath).clone().unwrap().path()).unwrap().display());
 
             // Set variables
-            let filename: String = fs::canonicalize((&refpath).clone().unwrap().path()).unwrap().file_name().unwrap().to_str().unwrap().to_owned();
+            let filename: String = path::absolute((&refpath).clone().unwrap().path()).unwrap().file_name().unwrap().to_str().unwrap().to_owned();
             let dest: String = clonedbackup + "/" + &filename;
 
             // Copy files
-            println!("Destination: {}", &dest);
-            if ((&refpath).unwrap().metadata().unwrap().is_file()) {
-                let _ = fs::copy(&refpath.unwrap().path(), &dest);
-            } else {
-                copy_dir_all(&refpath.unwrap().path(), &dest).expect("Couldn't copy directory!");
+            if !Path::new(&dest).exists() {
+                println!("Copying: {}", path::absolute((&refpath).clone().unwrap().path()).unwrap().display());
+                println!("Destination: {}", &dest);
+                if (&refpath).unwrap().metadata().unwrap().is_file() {
+                    let _ = fs::copy(&refpath.unwrap().path(), &dest);
+                } else {
+                    copy_dir_all(path::absolute(&refpath.unwrap().path()).unwrap(), path::absolute(&dest).unwrap()).expect("Couldn't copy directory!");
+                }
             }
         }
         println!("Sleeping {}s...", args.interval);
