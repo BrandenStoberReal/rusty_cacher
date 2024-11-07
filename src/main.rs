@@ -1,13 +1,15 @@
 use std::{fs::{self, DirEntry}, io, path::{self, Path}, thread, time::Duration};
 use clap::Parser;
 
-fn createdir(path: &str) -> std::io::Result<()> {
+// Creates a folder.
+fn create_dir(path: &str) -> std::io::Result<()> {
     if !Path::new(path).exists() {
         fs::create_dir(path)?;
     }
     Ok(())
 }
 
+// Clones a directory and all subdirectories/files.
 fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
     fs::create_dir_all(&dst)?;
     for entry in fs::read_dir(src)? {
@@ -44,6 +46,7 @@ fn main() {
     let cachepath: String;
     let backup_path: String;
 
+    // Handle default arguments and stuff
     if args.cachepath != "null" {
         cachepath = args.cachepath;
     } else {
@@ -52,38 +55,40 @@ fn main() {
         #[cfg(windows)]
         let app_data: String = std::env::var("APPDATA").expect("No APPDATA directory");
 
-        cachepath = app_data + "\\..\\LocalLow\\VRChat\\VRChat\\Cache-WindowsPlayer";
+        cachepath = app_data + "\\..\\LocalLow\\VRChat\\VRChat\\Cache-WindowsPlayer"; // Expressions are experimental for attributes so unix users should shove in their own path with the CLI flag
     }
 
-    createdir(&args.backuppath).expect("Error creating the directory.");
+    create_dir(&args.backuppath).expect("Error creating the directory.");
     backup_path = args.backuppath;
 
-    println!("{}", String::from("Cache Directory: ") + path::absolute(&cachepath).unwrap().display().to_string().as_str());
-    println!("{}", String::from("Backup Directory: ") + path::absolute(&backup_path).unwrap().display().to_string().as_str());
+    println!("{}", String::from("[OPTION] Cache Directory: ") + path::absolute(&cachepath).unwrap().display().to_string().as_str());
+    println!("{}", String::from("[OPTION] Backup Directory: ") + path::absolute(&backup_path).unwrap().display().to_string().as_str());
     loop {
-        println!("Beginning backup...");
+        println!("[CACHE BACKUP] Beginning backup...");
         let paths = fs::read_dir(&cachepath).unwrap();
         for path in paths {
-            // Clone our variables hehe
-            let clonedbackup: String = (&backup_path).clone().to_owned();
-            let refpath:Result<&DirEntry, &io::Error> = (&path).as_ref();
+            // Clone our variables (?????)
+            let clonedbackup: String = (&backup_path).clone().to_owned(); // Backup location clone for borrowing
+            let refpath:Result<&DirEntry, &io::Error> = (&path).as_ref(); // No idea what this means
 
             // Set variables
-            let filename: String = path::absolute((&refpath).clone().unwrap().path()).unwrap().file_name().unwrap().to_str().unwrap().to_owned();
-            let dest: String = clonedbackup + "/" + &filename;
+            let filename: String = path::absolute(&refpath.clone().unwrap().path()).unwrap().file_name().unwrap().to_str().unwrap().to_owned(); // Somehow this is valid rust code
+            let mut destPath: path::PathBuf = Path::new(&clonedbackup).to_path_buf(); // Mutable path buffer for backup location
+            destPath.push(&filename); // This appends filename so I don't have to hardcode
+            let dest: String = destPath.display().to_string();
 
             // Copy files
             if !Path::new(&dest).exists() || &filename == "__info" {
-                println!("Copying: {}", path::absolute((&refpath).clone().unwrap().path()).unwrap().display());
-                println!("Destination: {}", &dest);
+                println!("[CACHE BACKUP] Cache Location: {}", path::absolute(&refpath.clone().unwrap().path()).unwrap().display()); // These really should be a variable but fuck it
+                println!("[CACHE BACKUP] Backup Destination: {}", path::absolute(&dest).unwrap().display().to_string());
                 if (&refpath).unwrap().metadata().unwrap().is_file() {
-                    let _ = fs::copy(&refpath.unwrap().path(), &dest);
+                    let _ = fs::copy(&refpath.unwrap().path(), &dest); // This is really only used for __info file
                 } else {
                     copy_dir_all(path::absolute(&refpath.unwrap().path()).unwrap(), path::absolute(&dest).unwrap()).expect("Couldn't copy directory!");
                 }
             }
         }
-        println!("Sleeping {}s...", args.interval);
+        println!("[TIMEOUT] Sleeping {}s...", args.interval);
         thread::sleep(Duration::from_secs(args.interval));
     }
 }
