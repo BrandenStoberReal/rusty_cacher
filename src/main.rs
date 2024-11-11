@@ -81,7 +81,7 @@ fn main() {
 
             // Copy files
             if !Path::new(&dest).exists() || &filename == "__info" {
-                println!("[{}] {}: {}", "CACHE BACKUP".purple(), "Cache Location".green(), path::absolute(&refpath.clone().unwrap().path()).unwrap().display().to_string().red()); // These really should be a variable but fuck it
+                println!("[{}] {}: {}", "CACHE BACKUP".purple(), "File/Directory:".green(), path::absolute(&refpath.clone().unwrap().path()).unwrap().display().to_string().red()); // These really should be a variable but fuck it
                 println!("[{}] {}: {}", "CACHE BACKUP".purple(), "Backup Destination".green(), path::absolute(&dest).unwrap().display().to_string().red());
                 if (&refpath).unwrap().metadata().unwrap().is_file() {
                     let _ = fs::copy(&refpath.unwrap().path(), &dest); // This is really only used for __info file
