@@ -63,11 +63,11 @@ fn main() {
     create_dir(&args.backuppath).expect("Error creating the directory.");
     backup_path = args.backuppath;
 
-    println!("[{}] {}: {}", "OPTION".purple(), "Cache Directory".cyan(), &path::absolute(&cachepath).unwrap().display().to_string().red());
-    println!("[{}] {}: {}", "OPTION".purple(), "Backup Directory".cyan(), &path::absolute(&backup_path).unwrap().display().to_string().red());
+    println!("[{}] {}: {}", "SETTING".purple(), "Cache Directory".cyan(), &path::absolute(&cachepath).unwrap().display().to_string().red());
+    println!("[{}] {}: {}", "SETTING".purple(), "Backup Directory".cyan(), &path::absolute(&backup_path).unwrap().display().to_string().red());
     loop {
         println!("[{}] {}", "CACHE BACKUP".purple(), "Beginning backup...".green());
-        let paths = fs::read_dir(&cachepath).unwrap();
+        let paths: fs::ReadDir = fs::read_dir(&cachepath).unwrap();
         for path in paths {
             // Clone our variables (?????)
             let clonedbackup: String = (&backup_path).clone().to_owned(); // Backup location clone for borrowing
@@ -75,9 +75,9 @@ fn main() {
 
             // Set variables
             let filename: String = path::absolute(&refpath.clone().unwrap().path()).unwrap().file_name().unwrap().to_str().unwrap().to_owned(); // Somehow this is valid rust code
-            let mut destPath: path::PathBuf = Path::new(&clonedbackup).to_path_buf(); // Mutable path buffer for backup location
-            destPath.push(&filename); // This appends filename so I don't have to hardcode
-            let dest: String = destPath.display().to_string();
+            let mut dest_path: path::PathBuf = Path::new(&clonedbackup).to_path_buf(); // Mutable path buffer for backup location
+            dest_path.push(&filename); // This appends filename so I don't have to hardcode
+            let dest: String = dest_path.display().to_string();
 
             // Copy files
             if !Path::new(&dest).exists() || &filename == "__info" {
